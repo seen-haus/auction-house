@@ -19,7 +19,8 @@ contract AuctionHouse is ERC1155Holder {
         bool closed;
     }
 
-    address payable haus;
+    address payable public haus;
+    address public gov;
     // the amount of sales which goes to gov stakers. Max is 500 (50%)
     uint256 public fee;
     uint256 public minSeen;
@@ -32,12 +33,13 @@ contract AuctionHouse is ERC1155Holder {
     
     constructor(address payable _haus, uint256 _fee, uint256 _min) {
         haus = _haus;
+        gov = msg.sender;
         fee = _fee;
         minSeen = _min;
     }
 
-    modifier onlyHaus {
-        require(msg.sender == haus, "!gov");
+    modifier onlyGov {
+        require(msg.sender == gov, "!gov");
         _;
     }
 
@@ -131,7 +133,7 @@ contract AuctionHouse is ERC1155Holder {
         auctions[_id].closed = true;
     }
 
-    function cancel(uint256 _id) external onlyHaus {
+    function cancel(uint256 _id) external onlyGov {
         Auction memory auction = auctions[_id];
 
         require(_id < count, "bid:no auction");
@@ -155,7 +157,15 @@ contract AuctionHouse is ERC1155Holder {
         auctions[_id].closed = true;
     }
 
-    function updateMinSeen(uint256 _amount) external onlyHaus {
+    function updateHaus(address payable _haus) external onlyGov {
+        haus = _haus;
+    }
+
+    function updateGov(address _gov) external onlyGov {
+        gov = _gov;
+    }
+
+    function updateMinSeen(uint256 _amount) external onlyGov {
         minSeen = _amount;
     }
 
