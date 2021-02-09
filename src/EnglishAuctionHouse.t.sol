@@ -24,11 +24,18 @@ contract ERC1155t is ERC1155Burnable {
     }
 }
 
-contract Haus {
+contract Haus is ERC20 {
     uint256 tes;
-    constructor() {
+
+    constructor() ERC20("SeenHaus", "xSEEN") {
         tes = 1;
+        _mint(msg.sender, 100);
     }
+
+    function callUpdateMinSeen(address _house, uint256 _amount) public {
+        AuctionHouse(_house).updateMinSeen(_amount);
+    }
+
     receive() external payable {}
 }
 
@@ -39,6 +46,8 @@ contract Seller is ERC1155Holder {
         test1155 = ERC1155t(_addr);
         test1155.mint(1, 1);
         test1155.mint(2, 1);
+        test1155.mint(3, 1);
+
         test1155.setApprovalForAll(address(_house), true);
     }
 
@@ -78,10 +87,11 @@ contract AuctionHouseTest is DSTest, ERC1155Holder {
         haus = new Haus();
         house = new AuctionHouse(payable(address(haus)), 150, 0);
 
-        // test20 = new ERC20t("test", "test");
         test1155 = new ERC1155t();
 
         seller = new Seller(address(test1155), address(house));
+
+        haus.transfer(address(seller), 10);
 
         house.newAuction(payable(address(seller)), address(test1155), 1, block.timestamp, block.timestamp + 1, 1 ether);
         house.newAuction(payable(address(seller)), address(test1155), 2, block.timestamp, block.timestamp + 1, 1 ether);
@@ -156,6 +166,11 @@ contract AuctionHouseTest is DSTest, ERC1155Holder {
         // end the auction
         hevm.warp(block.timestamp + 1);
         house.close(1);
+    }
+
+    function testFail_notEnoughSeen() public {
+        haus.callUpdateMinSeen(address(house), 11000);
+        house.newAuction(payable(address(seller)), address(test1155), 3, block.timestamp, block.timestamp + 1, 1 ether);
     }
 
     receive() external payable {}

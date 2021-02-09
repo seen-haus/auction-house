@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "./OpenZeppelin/ERC1155/ERC1155Burnable.sol";
 import "./OpenZeppelin/ERC1155/ERC1155Holder.sol";
+import "./OpenZeppelin/ERC20/IERC20.sol";
 
 contract AuctionHouse is ERC1155Holder {
 
@@ -42,7 +43,7 @@ contract AuctionHouse is ERC1155Holder {
 
     /// @notice deploy new english auction
     function newAuction(address payable _seller, address _token, uint256 _id, uint256 _start, uint256 _end, uint96 _startPrice) external {
-        // TODO check for seen stake in the haus
+        require(IERC20(haus).balanceOf(_seller) >= minSeen || IERC20(haus).balanceOf(msg.sender) >= minSeen, "newAuction:not enough seen");
 
         auctions[count] = Auction(payable(address(0)), _startPrice, _token, _seller, _id, _start, _end, false);
         count++;
@@ -117,6 +118,30 @@ contract AuctionHouse is ERC1155Holder {
         require(!auction.closed, "close:close() already called");
         require(auction.buyer == address(0), "close:no bids");
         require(block.timestamp >= auction.end, "close:auction live");
+
+        // transfer erc1155 to seller
+        IERC1155(auction.token).safeTransferFrom(
+            address(this),
+            auction.seller,
+            auction.tokenId,
+            1,
+            new bytes(0x0)
+        );
+
+        auctions[_id].closed = true;
+    }
+
+    function cancel(uint256 _id) external onlyHaus {
+        Auction memory auction = auctions[_id];
+
+        require(_id < count, "bid:no auction");
+        require(!auction.closed, "close:close() already called");
+        require(block.timestamp < auction.end, "bid:auction ended");
+
+        // Give back the last bidders money
+        if (auction.buyer != address(0)) {
+            auction.buyer.transfer(auction.bid);
+        }
 
         // transfer erc1155 to seller
         IERC1155(auction.token).safeTransferFrom(
