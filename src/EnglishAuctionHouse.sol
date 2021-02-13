@@ -65,7 +65,7 @@ contract AuctionHouse is ERC1155Holder {
     function bid(uint256 _id) external payable {
         Auction memory auction = auctions[_id];
 
-        // require(msg.sender == tx.origin, "bid:no contracts");
+        require(msg.sender == tx.origin, "bid:no contracts");
         require(_id < count, "bid:no auction");
         require(block.timestamp >= auction.start, "bid:auction not started");
         require(block.timestamp < auction.end, "bid:auction ended");
