@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "ds-test/test.sol";
 
-import "./EnglishAuctionHouse.sol";
+import "./ERC1155AuctionHouse.sol";
 
 import "./OpenZeppelin/ERC20/ERC20Burnable.sol";
 

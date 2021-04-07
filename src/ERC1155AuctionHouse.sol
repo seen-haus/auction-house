@@ -21,7 +21,6 @@ contract AuctionHouse is ERC1155Holder {
 
     address payable public haus;
     address public gov;
-    // the amount of sales which goes to gov stakers. Max is 500 (50%)
     uint256 public fee;
     uint256 public minSeen;
 
@@ -163,6 +162,10 @@ contract AuctionHouse is ERC1155Holder {
 
     function updateGov(address _gov) external onlyGov {
         gov = _gov;
+    }
+
+    function updateFee(uint256 _fee) external onlyGov {
+        fee = _fee;
     }
 
     function updateMinSeen(uint256 _amount) external onlyGov {
